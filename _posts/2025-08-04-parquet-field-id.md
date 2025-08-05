@@ -20,14 +20,14 @@ Parquet File
         └── ...
 ```
 
-Information about field IDs is also provided in iceberg official website. See: https://iceberg.apache.org/spec/#schemas
+Information about field IDs is also provided in iceberg official website. See [This](https://iceberg.apache.org/spec/#schemas)
 
 ### Parquet Writers That Support Writing Field IDs
 
 #### Apache Arrow
 Many frameworks' Parquet writers can set field IDs during write, such as the Parquet Java API. In Arrow C++, the interface appears more cumbersome. It is set via special key_value_metadata.
 
-```c++
+```cpp
 auto name_field = arrow::field(
     "name", arrow::utf8(),
     /*nullable=*/false,
@@ -35,7 +35,7 @@ auto name_field = arrow::field(
 );
 ```
 
-Reference: https://github.com/apache/arrow/blob/release-15.0.0-rc1/cpp/src/parquet/arrow/writer.h#L51
+Reference: [This](https://github.com/apache/arrow/blob/release-15.0.0-rc1/cpp/src/parquet/arrow/writer.h#L51)
 
 #### Facebook Velox
 
