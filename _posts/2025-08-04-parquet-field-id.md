@@ -1,3 +1,7 @@
+---
+tags: [spark, parquet, velox, iceberg]
+---
+
 ## Something about Parquet Field IDs in Data Lakes
 
 ### Introduction
@@ -33,6 +37,16 @@ auto name_field = arrow::field(
     /*nullable=*/false,
     arrow::key_value_metadata({"PARQUET:field_id"}, {"2"})
 );
+
+...
+
+auto schema = arrow::schema(
+    {id_field, name_field, score_field});
+    
+...
+
+auto table = arrow::Table::Make(
+    schema, {id_array, name_array, score_array});
 ```
 
 Reference: [This](https://github.com/apache/arrow/blob/release-15.0.0-rc1/cpp/src/parquet/arrow/writer.h#L51)
