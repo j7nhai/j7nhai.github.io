@@ -22,7 +22,7 @@ To ensure that each columnar batch is written to the correct directory, we imple
 3. Calculate the target directory for writing.
 4. Use the Velox writer to perform writing.
 
-![shuffle by bucket id](images/spark-shuffle-by-bucket-id.png)
+![shuffle by bucket id](/assets/images/spark-shuffle-by-bucket-id.png)
 
 #### Using Bucket ID as Partition ID
 
