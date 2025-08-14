@@ -5,10 +5,10 @@ tags: [spark, gluten, velox, iceberg]
 
 ### Motivation for This Design
 
-We have designed a native write solution for Iceberg tables in Gluten (based on Velox).
+We have designed a native write solution for Iceberg tables in [Gluten](https://gluten.apache.org/) (based on [Velox](https://velox-lib.io/)).
 When using the Gluten compute engine, data is stored in a columnar format, and we need to write this data to HDFS natively to avoid falling back to the JVM.
 
-Velox’s Parquet writer natively supports columnar writes. However, in many of our business scenarios, Iceberg tables are bucketed tables, which play a crucial role in SPJ.
+Velox’s Parquet writer natively supports columnar writes. However, in many of our business scenarios, Iceberg tables are bucketed tables, which play a crucial role in [SPJ](https://issues.apache.org/jira/browse/SPARK-37375).
 For bucketed tables, the main challenge with columnar writes is determining the correct directory for each columnar batch. If the directory is incorrect, it will affect the correctness of data reads.
 
 ### Current Spark-Iceberg Write Strategy for Bucket Tables
@@ -46,5 +46,5 @@ By extracting just one row, we can determine the target directory for writing, a
 #### Preventing Partition Coalescing from Breaking the Logic
 
 We set the number of shuffle partitions to match the number of buckets.
-However, Adaptive Query Execution (AQE) may perform Partition Coalescing, which changes the number of partitions. 
+However, Adaptive Query Execution (AQE) may perform [Partition Coalescing](https://spark.apache.org/docs/3.5.3/sql-performance-tuning.html#coalescing-post-shuffle-partitions), which changes the number of partitions. 
 To prevent this, we also need to modify the rules for Partition Coalescing.

@@ -1,0 +1,18 @@
+<script src="https://unpkg.com/mermaid@11.6.0/dist/mermaid.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var blocks = document.querySelectorAll('pre code.language-mermaid');
+        blocks.forEach(function(block) {
+            var parent = block.parentElement;
+            var container = document.createElement('div');
+            container.className = 'mermaid';
+            container.textContent = block.textContent;
+            parent.parentNode.replaceChild(container, parent);
+        });
+
+        if(window.mermaid){
+            mermaid.initialize({ startOnLoad: true });
+            mermaid.init(undefined, document.querySelectorAll('.mermaid'));
+        }
+    });
+</script>

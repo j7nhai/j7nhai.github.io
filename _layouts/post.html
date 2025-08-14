@@ -28,3 +28,7 @@ layout: default
 
   <a class="u-url" href="{{ page.url | relative_url }}" hidden></a>
 </article>
+
+{% if page.mermaid %}
+  {% include mermaid.html %}
+{% endif %}
