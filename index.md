@@ -7,7 +7,14 @@ I am passionate about exploring the latest innovations in the data ecosystem and
 
 Through this blog, I look forward to sharing my experiences, technical insights, and best practices.
 
-If you'd like to contact me, feel free to add me as a friend on WeChat using the QR code on the **left** below.
-If you have benefited from my articles, you are welcome to buy me a coffee via the tip QR code on the **right**.
+If you'd like to contact me, feel free to add me as a friend on WeChat using the QR code below.
 
-![qr-code](/assets/images/my-qr-code.png)
+<div style="text-align: center;">
+  <img src="/assets/images/wx-code.png" width="300" alt="wx code">
+</div>
+
+If you have benefited from my articles, you are welcome to buy me a coffee via the QR code below.
+
+<div style="text-align: center;">
+  <img src="/assets/images/payment-code.png" width="300" alt="payment code">
+</div>
