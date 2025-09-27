@@ -74,7 +74,12 @@ schema.getFields.asScala.foreach {
 ```
 
 #### Parquet-tools
-Not yet supported
+
+Example:
+
+```bash
+parquet-tools schema xxx.parquet --format raw | json_pp
+```
 
 ### Field IDs in Parquet Files in Iceberg
 
