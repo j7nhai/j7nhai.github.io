@@ -1,21 +1,49 @@
 <hr>
+
+{%- assign current_lang = page.lang | default: site.lang | default: "en" -%}
+{%- assign t = site.data.i18n[current_lang] -%}
+
+{%- assign posts = site.posts | where: "lang", current_lang -%}
+{%- if current_lang == "en" -%}
+  {%- assign archive_url = "/archive.html" | relative_url -%}
+{%- else -%}
+  {%- assign archive_url = "/zh/archive.html" | relative_url -%}
+{%- endif -%}
+
+{%- assign current_index = nil -%}
+{%- for p in posts -%}
+  {%- if p.url == page.url -%}
+    {%- assign current_index = forloop.index0 -%}
+  {%- endif -%}
+{%- endfor -%}
+
+{%- assign prev_post = nil -%}
+{%- assign next_post = nil -%}
+{%- if current_index != nil -%}
+  {%- assign prev_index = current_index | plus: 1 -%}
+  {%- assign next_index = current_index | minus: 1 -%}
+  {%- assign prev_post = posts[prev_index] -%}
+  {%- assign next_post = posts[next_index] -%}
+{%- endif -%}
+
 <div class="post_navi">
-  {%- if page.previous.url -%}
-  <a class="post_navi-item nav_prev" href="{{ page.previous.url }}" title="{{ page.previous.title }}">
-    <div class="post_navi-arrow">&lt;</div><div class="post_navi-label">Previous Post</div><div><span>{{ page.previous.title }}</span></div>
+  {%- if prev_post and prev_post.url -%}
+  <a class="post_navi-item nav_prev" href="{{ prev_post.url | relative_url }}" title="{{ prev_post.title }}">
+    <div class="post_navi-arrow">&lt;</div><div class="post_navi-label">{{ t.previous_post }}</div><div><span>{{ prev_post.title }}</span></div>
   </a>
   {%- else -%}
-  <a class="post_navi-item nav_prev" href="{{ 'archive.html' | absolute_url }}" title="Blog Archive">
-    <div class="post_navi-arrow">&lt;</div><div class="post_navi-label">Blog Archive</div><div><span>Archive of all previous blog posts</span></div>
+  <a class="post_navi-item nav_prev" href="{{ archive_url }}" title="{{ t.archive }}">
+    <div class="post_navi-arrow">&lt;</div><div class="post_navi-label">{{ t.back_to_archive }}</div><div><span>{{ t.archive_subtitle }}</span></div>
   </a>
   {%- endif -%}
-  {%- if page.next.url -%}
-  <a class="post_navi-item nav_next" href="{{ page.next.url }}" title="{{ page.next.title }}">
-    <div class="post_navi-arrow">&gt;</div><div class="post_navi-label">Next Post</div><div><span>{{ page.next.title }}</span></div>
+
+  {%- if next_post and next_post.url -%}
+  <a class="post_navi-item nav_next" href="{{ next_post.url | relative_url }}" title="{{ next_post.title }}">
+    <div class="post_navi-arrow">&gt;</div><div class="post_navi-label">{{ t.next_post }}</div><div><span>{{ next_post.title }}</span></div>
   </a>
   {%- else -%}
-  <a class="post_navi-item nav_next" href="{{ 'archive.html' | absolute_url }}" title="Blog Archive">
-    <div class="post_navi-arrow">&gt;</div><div class="post_navi-label">Blog Archive</div><div><span>Archive of all previous blog posts</span></div>
+  <a class="post_navi-item nav_next" href="{{ archive_url }}" title="{{ t.archive }}">
+    <div class="post_navi-arrow">&gt;</div><div class="post_navi-label">{{ t.back_to_archive }}</div><div><span>{{ t.archive_subtitle }}</span></div>
   </a>
   {%- endif -%}
 </div>

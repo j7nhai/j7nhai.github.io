@@ -1,15 +1,16 @@
 ---
 tags: [spark, gluten, velox]
 mermaid: true
-lang: en
+lang: zh
 ref: velox-tablescan-prefetch
+permalink: /zh/2025/09/16/velox-tablescan-prefetch.html
 ---
-## ⚡️📥 Prefetching for the Velox Table Scan Operator
 
-In [Meta Velox](https://velox-lib.io/), a Source Operator is responsible for reading from data sources. 🧰
-The TableScan operator is one such Source Operator, whose main function is to read data splits. 📦
-In addition to TableScan, the `LocalExchange` operator, which is used for shuffle reads, 🔄
-is also a Source Operator.
+## ⚡️📥 Velox TableScan 算子的预取（Prefetch）机制
+
+在 [Meta Velox](https://velox-lib.io/) 中，Source Operator 负责从数据源读取数据。🧰
+TableScan 就是其中一种 Source Operator，它的核心职责是读取数据 split。📦
+除了 TableScan，常用于 shuffle read 的 `LocalExchange` 也是一种 Source Operator。🔄
 
 ```mermaid
 flowchart TD
@@ -29,14 +30,14 @@ other
 end
 ```
 
-This article will focus on the prefetching optimization for the TableScan operator.
-With this optimization, data files are pre-cached into memory while the main thread reads them, which significantly improves execution efficiency.
+本文聚焦 TableScan 的预取优化。
+通过该优化，在主线程读取数据的同时，会把后续将要读取的数据文件提前缓存到内存中，从而显著提升执行效率。
 
-### 🧵⚙️ Prefetching with Folly Executor
+### 🧵⚙️ 使用 Folly Executor 做异步预取
 
-The Folly executor is used by the TableScan operator to perform asynchronous prefetch operations.
-Therefore, to enable prefetching, a Folly executor object must be provided when registering the Hive connector.
-For example, the following code snippet from Gluten demonstrates how the Velox backend is initialized with prefetching support:
+TableScan 使用 Folly executor 执行异步预取操作。
+因此要启用预取，在注册 Hive connector 时需要提供一个 Folly executor 对象。
+例如，Gluten 的如下代码片段演示了如何在初始化 Velox backend 时开启预取支持：
 
 ```c++
   if (ioThreads > 0) {
@@ -51,16 +52,16 @@ For example, the following code snippet from Gluten demonstrates how the Velox b
   );
 ```
 
-Folly executor is passed along from the TableScan operator all the way to where it is actually used. As shown below:
+Folly executor 会沿着 TableScan 的调用链一路向下传递，直到真正用到它的地方。如下所示：
 
-- TableScan contains the member `dataSource_`
-- HiveDataSource contains the member `splitReader_`
-- SplitReader contains the member `baseReader_`
-- BaseReader contains the member `DirectBufferedInput input_`
-- DirectBufferedInput contains the member `DirectCoalescedLoad coalescedLoads_` (a list)
-- Finally, inside `DirectCoalescedLoad`, the asynchronous read is executed via the method loadOnFuture
+- TableScan 持有成员 `dataSource_`
+- HiveDataSource 持有成员 `splitReader_`
+- SplitReader 持有成员 `baseReader_`
+- BaseReader 持有成员 `DirectBufferedInput input_`
+- DirectBufferedInput 持有成员 `DirectCoalescedLoad coalescedLoads_`（一个 list）
+- 最终在 `DirectCoalescedLoad` 内部，通过 `loadOnFuture` 执行异步读
 
-This chain of ownership ensures the folly executor is available and used for asynchronous prefetching at the lowest layer where actual data loading occurs.
+这条 ownership 链保证了 folly executor 能在最底层（真正发生数据加载的地方）被拿到并用于异步预取。
 
 ```mermaid
 flowchart LR
@@ -82,21 +83,18 @@ executor[folly executor]
 executor -->|execute| load
 ```
 
-The above explanation only illustrates the general location of the prefetching process during the execution of the TableScan operator,
-as well as the fact that it utilizes a folly executor for asynchronous prefetching. More details will be provided later in this article.
+上面的说明主要帮助你定位：TableScan 的执行过程中，预取大致发生在什么位置，以及它确实通过 folly executor 做异步预取。
+更多细节会在后续章节展开。
 
-### 🧱🧠 Allocation Structure
+### 🧱🧠 Allocation 结构
 
+TableScan 从文件读取数据后，数据会被存放在 Velox 的 Allocation 结构中。
 
-After TableScan reads data from files, the data is stored in Velox's Allocation structure.
+Allocation 负责管理大块且非连续的内存。
+它包含多个 PageRun 对象，每个 PageRun 表示一段连续的内存页，并记录该段的起始地址与页数。
 
-Allocation is responsible for managing large, non-contiguous memory blocks.
-It contains multiple PageRun objects, each representing a segment of continuous memory pages,
-and stores the start address and the number of pages for that segment.
-
-In Velox, the memory for an Allocation object is allocated through the memory pool's allocateNonContiguous method.
-This function allocates multiple non-contiguous memory pages and organizes them into a list of PageRuns for subsequent data read and write operations.
-
+在 Velox 中，Allocation 的内存通过 memory pool 的 `allocateNonContiguous` 方法来分配。
+该函数会分配多段非连续内存页，并把它们组织成 PageRuns 列表，以用于后续的数据读写。
 
 ```c++
 
@@ -122,7 +120,7 @@ class Allocation {
 };
 ```
 
-### 🧩📋 DirectCoalescedLoad and LoadRequest
+### 🧩📋 DirectCoalescedLoad 与 LoadRequest
 
 ```mermaid
 classDiagram
@@ -135,9 +133,10 @@ classDiagram
     DirectCoalescedLoad : +getData(bool int64_t offset, Allocation& data, string& tinyData) 
 ```
 
-The DirectCoalescedLoad object is used for data loading. It has two important public functions: `loadOrFuture` and `getData`.
+`DirectCoalescedLoad` 用于数据加载，它有两个重要的 public 方法：`loadOrFuture` 与 `getData`。
 
-The `loadOrFuture` function produces data, while `getData` consumes data.
+- `loadOrFuture`：生产数据
+- `getData`：消费数据
 
 ```mermaid
 classDiagram
@@ -152,19 +151,18 @@ classDiagram
     LoadRequest : +int32_t loadSize
 ```
 
-`LoadRequest` is a data structure used during the data loading process.
-Its data field contains a Allocation structure `data`, which enables the allocation of large amounts of memory via the memory pool.
+`LoadRequest` 是数据加载过程中的一个数据结构。
+其中 `data` 字段是一个 Allocation 结构 `data`，它可以通过 memory pool 分配大块内存。
 
-Within a single load operation, multiple `LoadRequest` instances correspond to different shards of the file being loaded.
+在一次 load 操作中，多个 `LoadRequest` 会对应于被加载文件的不同 shard。
 
-### 🏗️📥 loadData Function
+### 🏗️📥 `loadData` 函数
 
-The underlying implementation of the loadOnFuture function calls loadData, which mainly performs the following logic:
+`loadOnFuture` 的底层实现会调用 `loadData`，其主要逻辑如下：
 
-1. For each request to be loaded, it allocates space for either tinyData or data based on the request's region and determines the size of loadSize.
-2. It constructs a buffers array `(vector<Range<char*>>)`. The buffers array itself does not allocate memory; rather, the memory blocks it references are actually tinyData or data in each request. Essentially, buffers serves as a unified abstraction over both dataType and data.
-3. It calls the read interface of the ReadFileInputStream input_ to read data from the file, with the data being loaded into data or tinyData fields in the request.
-
+1. 对每个 request，根据其 region 分配 `tinyData` 或 `data` 的空间，并决定 `loadSize`。
+2. 构造一个 buffers 数组（`vector<Range<char*>>`）。注意 buffers 本身并不分配内存；它引用的内存块实际上来自每个 request 的 `tinyData` 或 `data`。从抽象角度看，buffers 是对 small/large 两种数据载体的一层统一封装。
+3. 调用 `ReadFileInputStream input_` 的 read 接口从文件读取数据，数据会被写入 request 的 `data` 或 `tinyData`。
 
 ```c++
 std::vector<cache::CachePin> DirectCoalescedLoad::loadData(bool prefetch) {
@@ -197,8 +195,7 @@ std::vector<cache::CachePin> DirectCoalescedLoad::loadData(bool prefetch) {
 }
 ```
 
-The logic for small data requests is relatively straightforward: the data is allocated directly within the internal buffer of `std::string tinyData`.
-
+small data request 的逻辑比较直接：数据会被直接分配在 `std::string tinyData` 的内部 buffer 里。
 
 ```c++
       request.loadSize = region.length;
@@ -206,7 +203,7 @@ The logic for small data requests is relatively straightforward: the data is all
       buffers.push_back(folly::Range(request.tinyData.data(), region.length));
 ```
 
-The code block for large data requests works as follows: it first calculates the load size, then determines the required number of pages, and finally calls appendRanges to insert multiple Range objects into the buffer.
+large data request 的逻辑如下：先计算 load size，然后计算需要的 page 数，最后调用 `appendRanges` 往 buffer 中插入多个 Range。
 
 ```c++
       if (&request != &requests_.back()) {  // Not last request
@@ -221,7 +218,7 @@ The code block for large data requests works as follows: it first calculates the
       appendRanges(request.data, request.loadSize, buffers);
 ```
 
-Within `appendRanges`, the function calculates the actual readSize for each run in the PageRun array of data, and inserts Range objects into the buffer accordingly.
+在 `appendRanges` 内部，函数会为 data 里的每个 PageRun 计算实际的 readSize，并按需把 Range 插入到 buffer。
 
 ```c++
 void appendRanges(
@@ -239,9 +236,9 @@ void appendRanges(
 }
 ```
 
-### 🔍📤 getData Function
+### 🔍📤 `getData` 函数
 
-Because the offset values in the requests are monotonically increasing, a binary search can be used to efficiently locate the corresponding data block by offset.
+因为 requests 的 offset 单调递增，所以可以用二分查找按 offset 高效定位对应的数据块。
 
 ```cpp
 int32_t DirectCoalescedLoad::getData(
@@ -261,10 +258,10 @@ int32_t DirectCoalescedLoad::getData(
 }
 ```
 
-### 🧵⏩ Triggering Asynchronous loadData Reads
+### 🧵⏩ 触发异步 `loadData` 读取
 
-A TableScan reads data from multiple files, with each file further split into multiple loads.
-All of these loads are submitted to the Folly executor to be executed asynchronously.
+一次 TableScan 会读取多个文件，每个文件又会被拆分为多个 load。
+所有这些 load 会被提交到 Folly executor 中异步执行。
 
 ```cpp
   if (prefetch && executor_) {
@@ -282,8 +279,8 @@ All of these loads are submitted to the Folly executor to be executed asynchrono
   }
 ```
 
-When a new batch of data is needed and all previously loaded splits have been exhausted, an addSplit operation is triggered.
-After a series of preparation steps, the loadData function is executed asynchronously within the readRegions function.
+当需要新的数据 batch 且之前加载的 splits 已经消耗完毕时，会触发 `addSplit`。
+经过一系列准备步骤后，`loadData` 会在 `readRegions` 内部被异步执行。
 
 ```c++
 #1  facebook::velox::dwio::common::DirectBufferedInput::readRegions
@@ -304,16 +301,19 @@ After a series of preparation steps, the loadData function is executed asynchron
 #17 Java_org_apache_gluten_vectorized_ColumnarBatchOutIterator_nativeHasNext
 ```
 
-### ⏳🧯 Avoiding Premature Consumption
+### ⏳🧯 避免过早消费（Premature Consumption）
 
-Since data is loaded asynchronously, it is necessary to ensure that data is available before consumption. This is achieved through state management and the use of SemiFuture.
+由于数据是异步加载的，因此需要保证在消费前数据已经可用。
+这通常通过 state 管理以及 SemiFuture 来实现。
 
-In Velox, the output function of the TableScan operator is getOutput, which ultimately obtains a columnar batch.
-Before fetching data, the loadOrFuture function is called to ensure that data is loaded only once.
-Internally, this function uses a mutex and a `state_` variable for concurrency control:
+在 Velox 中，TableScan 的输出函数是 `getOutput`，最终会产出一个 columnar batch。
+在取数据前，会调用 `loadOrFuture` 来确保同一份数据只会被加载一次。
+`loadOrFuture` 内部使用 mutex 与 `state_` 做并发控制：
 
-- When multiple threads access this function concurrently, only the first thread that enters while the state is "Planned" will actually trigger data loading and execute the loading logic.
-- Other concurrent threads, if they find the state is "Loading", will not initiate another load. If a `folly::SemiFuture` pointer is provided by the caller, loadOrFuture will assign a SemiFuture object to it, allowing the caller to asynchronously wait for the data load to finish. If no pointer is provided, the function simply returns the current state (returning false if loading is incomplete).
+- 多线程并发访问时，只有第一个在 state 为 "Planned" 的线程会真正触发数据加载并执行加载逻辑。
+- 其他线程如果发现 state 为 "Loading"，不会重复发起 load。
+  - 若调用方传入了 `folly::SemiFuture` 指针，`loadOrFuture` 会把一个 SemiFuture 赋值给它，使得调用方可以异步等待加载完成。
+  - 若没有传入指针，函数会直接返回当前状态（若加载未完成则返回 false）。
 
 ```cpp
 bool CoalescedLoad::loadOrFuture(folly::SemiFuture<bool>* wait) {
@@ -342,15 +342,15 @@ bool CoalescedLoad::loadOrFuture(folly::SemiFuture<bool>* wait) {
 }
 ```
 
-### 🛡️🧠 Preventing Memory Leaks Caused by Asynchronous Threads
-During asynchronous prefetch operations, memory is allocated from the memory pool.
-If a task is interrupted, it is necessary to wait until all asynchronous tasks in the Folly executor finish before exiting the task;
-this avoids memory leaks caused by unfinished memory allocations.
-I have submitted a [PR](https://github.com/facebookincubator/velox/pull/14722) with this logic to the community. 
+### 🛡️🧠 避免异步线程导致的内存泄漏
+
+在异步预取过程中，会从 memory pool 分配内存。
+如果 task 被中断，需要在退出 task 前等待 Folly executor 中所有异步任务完成；
+否则可能出现由于内存分配尚未结束而导致的内存泄漏。
+我已经向社区提交了包含该逻辑的 [PR](https://github.com/facebookincubator/velox/pull/14722)。
 
 ### 🔗📎 References
+
 - [velox TableScan 的预取实现](https://zhuanlan.zhihu.com/p/661962803)
 - [Velox doc about TableScan](https://facebookincubator.github.io/velox/develop/operators.html#tablescannode)
-
-
 

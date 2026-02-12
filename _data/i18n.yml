@@ -1,0 +1,17 @@
+en:
+  language_name: English
+  archive: Blog Archive
+  posts: Posts
+  previous_post: Previous Post
+  next_post: Next Post
+  back_to_archive: Blog Archive
+  archive_subtitle: Archive of all previous blog posts
+
+zh:
+  language_name: 中文
+  archive: 文章归档
+  posts: 文章
+  previous_post: 上一篇
+  next_post: 下一篇
+  back_to_archive: 文章归档
+  archive_subtitle: 所有历史文章归档

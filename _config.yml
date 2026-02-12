@@ -2,6 +2,12 @@ title: "J7nhai's Blog"
 author: "J7nhai"
 description: "^_^" # This will show up in places like twitter, linkedin, etc, if you share your sites url as a post.
 
+# Default site language (used by minima / SEO)
+lang: en
+
+# Custom: supported languages
+languages: ["en", "zh"]
+
 # Email / Social media user names used by the minima theme:
 # All of these are optional and can be removed or commented out
 email: "j7nhai.chen@gmail.com"
@@ -37,6 +43,6 @@ titles_from_headings:
 defaults:
   - scope:
       path: ""
-      type: post
+      type: posts
     values:
       tags: Other

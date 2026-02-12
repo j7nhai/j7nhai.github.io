@@ -3,3 +3,7 @@
 .jekyll-cache
 .bundle
 vendor
+
+# macOS
+.DS_Store
+**/.DS_Store

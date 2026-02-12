@@ -1,0 +1,56 @@
+{%- assign current_lang = page.lang | default: site.lang | default: "en" -%}
+{%- assign is_post = page.collection == "posts" -%}
+
+{%- assign url_en = "/" | relative_url -%}
+{%- assign url_zh = "/zh/" | relative_url -%}
+
+{%- if page.ref -%}
+  {%- assign candidates = site.pages | concat: site.posts -%}
+  {%- assign doc_en = candidates | where: "ref", page.ref | where: "lang", "en" | first -%}
+  {%- assign doc_zh = candidates | where: "ref", page.ref | where: "lang", "zh" | first -%}
+
+  {%- if doc_en and doc_en.url -%}
+    {%- assign url_en = doc_en.url | relative_url -%}
+  {%- endif -%}
+  {%- if doc_zh and doc_zh.url -%}
+    {%- assign url_zh = doc_zh.url | relative_url -%}
+  {%- endif -%}
+{%- endif -%}
+
+{%- assign show_switch = true -%}
+{%- if is_post and page.ref and (doc_zh == nil or doc_en == nil) -%}
+  {%- assign show_switch = false -%}
+{%- endif -%}
+
+{%- if show_switch -%}
+<div class="lang-toggle" data-url-en="{{ url_en }}" data-url-zh="{{ url_zh }}">
+  <label class="lang-toggle__control" aria-label="Language">
+    <span class="lang-toggle__side lang-toggle__side--en">{{ site.data.i18n.en.language_name }}</span>
+
+    <span class="lang-toggle__track" aria-hidden="true">
+      <input class="lang-toggle__input" type="checkbox" {% if current_lang == "zh" %}checked{% endif %}>
+      <span class="lang-toggle__thumb"></span>
+    </span>
+
+    <span class="lang-toggle__side lang-toggle__side--zh">{{ site.data.i18n.zh.language_name }}</span>
+  </label>
+</div>
+
+<script>
+(function () {
+  var root = document.currentScript && document.currentScript.previousElementSibling;
+  if (!root || !root.classList || !root.classList.contains('lang-toggle')) return;
+  if (root.dataset.bound === '1') return;
+  root.dataset.bound = '1';
+
+  var input = root.querySelector('.lang-toggle__input');
+  if (!input) return;
+
+  input.addEventListener('change', function () {
+    var url = input.checked ? root.dataset.urlZh : root.dataset.urlEn;
+    if (!url) return;
+    window.location.href = url;
+  });
+})();
+</script>
+{%- endif -%}

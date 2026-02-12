@@ -1,14 +1,17 @@
 ---
 tags: [spark, parquet, velox, iceberg]
-lang: en
+lang: zh
 ref: parquet-field-id
+permalink: /zh/2025/07/31/parquet-field-id.html
 ---
 
-## 🧩🧱 Something about Parquet Field IDs in Data Lakes
+## 🧩🧱 数据湖场景下 Parquet Field ID 的一些记录
 
-### 👋 Introduction
+### 👋 背景
 
-Starting from Spark 3.3, for schemas with schema IDs, a field ID will also be written into the Parquet file during write operations. The main reason is to be compatible with data lake formats such as Iceberg and Delta Lake, which rely on field IDs for schema management. With field IDs, when adding or removing fields, old data can still be read correctly.
+从 Spark 3.3 开始，对于带 schema ID 的 schema，写入 Parquet 时会同时把 **field ID** 写进 Parquet 文件。
+这么做的主要原因，是为了兼容 Iceberg、Delta Lake 等依赖 field ID 做 schema 管理的数据湖格式。
+有了 field ID 之后，即使新增/删除字段，老数据也能被正确读取。
 
 ```
 Parquet File
@@ -26,12 +29,14 @@ Parquet File
         └── ...
 ```
 
-📚 Information about field IDs is also provided in iceberg official website. See [This](https://iceberg.apache.org/spec/#schemas)
+📚 Iceberg 官网规范里也提到了 field ID，见 [This](https://iceberg.apache.org/spec/#schemas)。
 
-### ✍️📦 Parquet Writers That Support Writing Field IDs
+### ✍️📦 支持写入 Field ID 的 Parquet Writer
 
 #### 🏹 Apache Arrow
-Many frameworks' Parquet writers can set field IDs during write, such as the Parquet Java API. In Arrow C++, the interface appears more cumbersome. It is set via special key_value_metadata.
+
+很多框架的 Parquet writer 都支持设置 field ID，例如 Parquet Java API。
+而在 Arrow C++ 里，这个接口看起来更“绕”一些：它是通过 `key_value_metadata` 来设置的。
 
 ```cpp
 auto name_field = arrow::field(
@@ -55,13 +60,13 @@ Reference: [This](https://github.com/apache/arrow/blob/release-15.0.0-rc1/cpp/sr
 
 #### 🦊 Facebook Velox
 
-Velox's Parquet writer is based on Arrow, so in theory it can support field IDs, but currently it is not supported.
+Velox 的 Parquet writer 基于 Arrow，因此理论上也可以支持 field ID，但目前还没有实现。
 
-### 🔎📖 Parquet Readers That Support Viewing Field IDs
+### 🔎📖 支持查看 Field ID 的 Parquet Reader
 
 #### ☕️ Apache Parquet Java
 
-Supported
+支持。
 
 ```scala
 val schema: MessageType = footer
@@ -75,19 +80,21 @@ schema.getFields.asScala.foreach {
 }
 ```
 
-#### 🧰 Parquet-tools
+#### 🧰 parquet-tools
 
-Example:
+示例：
 
 ```bash
 parquet-tools schema xxx.parquet --format raw | json_pp
 ```
 
-### 🧊🧷 Field IDs in Parquet Files in Iceberg
+### 🧊🧷 Iceberg 中 Parquet 文件里的 Field ID
 
-They correspond to the IDs in the schema, so the storage order of columns in the Parquet file does not matter. Iceberg will use the IDs in the schema to find the corresponding columns in the file.
+它们对应的是 schema 里的 ID，所以 Parquet 文件里列的物理存储顺序并不重要。
+Iceberg 会基于 schema 的 ID 去文件里找到对应的列。
 
-For example, when initializing Arrow's columnar reader, both the Iceberg schema and the Parquet schema are used for initialization. In the visit function, they are linked together via the field ID.
+例如在初始化 Arrow 的列式 reader 时，会同时使用 Iceberg schema 与 Parquet schema。
+在 visit 过程中，它们会通过 field ID 关联起来。
 
 ```java
   public static ColumnarBatchReader buildReader(
@@ -108,4 +115,3 @@ For example, when initializing Arrow's columnar reader, both the Iceberg schema 
                 deleteFilter));
   }
 ```
-

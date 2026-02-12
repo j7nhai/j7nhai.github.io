@@ -1,7 +1,7 @@
 ---
 layout: page
-title: Blog Archive
-lang: en
+title: 文章归档
+lang: zh
 ref: archive
 ---
 
@@ -13,7 +13,7 @@ ref: archive
 <h3>{{ tag[0] }}</h3>
 <ul>
 {% for post in posts %}
-<li><a href="{{ post.url | relative_url }}">{{ post.date | date: "%B %Y" }} - {{ post.title }}</a></li>
+<li><a href="{{ post.url | relative_url }}">{{ post.date | date: "%Y-%m" }} - {{ post.title }}</a></li>
 {% endfor %}
 </ul>
 {%- endif -%}
