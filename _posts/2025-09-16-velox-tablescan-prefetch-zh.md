@@ -59,7 +59,7 @@ Folly executor 会沿着 TableScan 的调用链一路向下传递，直到真正
 - SplitReader 持有成员 `baseReader_`
 - BaseReader 持有成员 `DirectBufferedInput input_`
 - DirectBufferedInput 持有成员 `DirectCoalescedLoad coalescedLoads_`（一个 list）
-- 最终在 `DirectCoalescedLoad` 内部，通过 `loadOnFuture` 执行异步读
+- 最终在 `DirectCoalescedLoad` 内部，通过 `loadOrFuture` 执行异步读
 
 这条 ownership 链保证了 folly executor 能在最底层（真正发生数据加载的地方）被拿到并用于异步预取。
 
@@ -158,7 +158,7 @@ classDiagram
 
 ### 🏗️📥 `loadData` 函数
 
-`loadOnFuture` 的底层实现会调用 `loadData`，其主要逻辑如下：
+`loadOrFuture` 的底层实现会调用 `loadData`，其主要逻辑如下：
 
 1. 对每个 request，根据其 region 分配 `tinyData` 或 `data` 的空间，并决定 `loadSize`。
 2. 构造一个 buffers 数组（`vector<Range<char*>>`）。注意 buffers 本身并不分配内存；它引用的内存块实际上来自每个 request 的 `tinyData` 或 `data`。从抽象角度看，buffers 是对 small/large 两种数据载体的一层统一封装。
