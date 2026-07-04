@@ -58,7 +58,7 @@ Folly executor is passed along from the TableScan operator all the way to where 
 - SplitReader contains the member `baseReader_`
 - BaseReader contains the member `DirectBufferedInput input_`
 - DirectBufferedInput contains the member `DirectCoalescedLoad coalescedLoads_` (a list)
-- Finally, inside `DirectCoalescedLoad`, the asynchronous read is executed via the method loadOnFuture
+- Finally, inside `DirectCoalescedLoad`, the asynchronous read is executed via the method loadOrFuture
 
 This chain of ownership ensures the folly executor is available and used for asynchronous prefetching at the lowest layer where actual data loading occurs.
 
@@ -159,7 +159,7 @@ Within a single load operation, multiple `LoadRequest` instances correspond to d
 
 ### 🏗️📥 loadData Function
 
-The underlying implementation of the loadOnFuture function calls loadData, which mainly performs the following logic:
+The underlying implementation of the loadOrFuture function calls loadData, which mainly performs the following logic:
 
 1. For each request to be loaded, it allocates space for either tinyData or data based on the request's region and determines the size of loadSize.
 2. It constructs a buffers array `(vector<Range<char*>>)`. The buffers array itself does not allocate memory; rather, the memory blocks it references are actually tinyData or data in each request. Essentially, buffers serves as a unified abstraction over both dataType and data.
