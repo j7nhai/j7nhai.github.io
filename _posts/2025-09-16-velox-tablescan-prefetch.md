@@ -99,7 +99,6 @@ This function allocates multiple non-contiguous memory pages and organizes them 
 
 
 ```c++
-
 class Allocation {
   class PageRun {
     template <typename T = uint8_t>

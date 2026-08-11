@@ -117,3 +117,107 @@ hr {
   font-size: 2.5em;
   opacity: 0.3;
 }
+
+/* Code block styling */
+pre {
+  border-radius: 8px;
+  border: 1px solid #e1e4e8;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  margin: 1.5em 0;
+  overflow: hidden;
+}
+
+pre code.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 1.2em 1.4em;
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Cascadia Code', 'Menlo', 'Consolas', monospace;
+  font-size: 0.85em;
+  line-height: 1.7;
+  border-radius: 8px;
+  background: #f6f8fa;
+  tab-size: 4;
+}
+
+/* Inline code */
+code:not(.hljs) {
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  background: rgba(175, 184, 193, 0.15);
+  border: 1px solid rgba(175, 184, 193, 0.25);
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Menlo', 'Consolas', monospace;
+  font-size: 0.85em;
+  color: #1f2328;
+  word-break: break-word;
+}
+
+/* Syntax highlighting - keywords */
+.hljs-keyword {
+  color: #cf222e;
+  font-weight: 600;
+}
+
+/* Types and class names */
+.hljs-type,
+.hljs-class .hljs-title,
+.hljs-title.class_ {
+  color: #8250df;
+}
+
+/* Strings */
+.hljs-string {
+  color: #0a3069;
+}
+
+/* Numbers and literals */
+.hljs-number,
+.hljs-literal {
+  color: #0550ae;
+}
+
+/* Function names */
+.hljs-function .hljs-title,
+.hljs-title.function_ {
+  color: #8250df;
+}
+
+/* Comments */
+.hljs-comment {
+  color: #6e7781;
+  font-style: italic;
+}
+
+/* Built-in types (std::, folly::, etc.) */
+.hljs-built_in {
+  color: #953800;
+}
+
+/* Parameters */
+.hljs-params {
+  color: #24292f;
+}
+
+/* Preprocessor / meta (#include, #define) */
+.hljs-meta {
+  color: #cf222e;
+}
+
+.hljs-meta .hljs-string {
+  color: #0a3069;
+}
+
+/* Template parameters, variable names */
+.hljs-variable,
+.hljs-attr {
+  color: #953800;
+}
+
+/* Namespace / scope operators */
+.hljs-symbol {
+  color: #0550ae;
+}
+
+/* Subst (template expressions) */
+.hljs-subst {
+  color: #24292f;
+}

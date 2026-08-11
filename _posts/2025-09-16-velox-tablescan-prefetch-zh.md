@@ -97,7 +97,6 @@ Allocation 负责管理大块且非连续的内存。
 该函数会分配多段非连续内存页，并把它们组织成 PageRuns 列表，以用于后续的数据读写。
 
 ```c++
-
 class Allocation {
   class PageRun {
     template <typename T = uint8_t>
