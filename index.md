@@ -14,14 +14,15 @@ ref: home
 
 📝 Through this blog, I look forward to sharing my experiences, technical insights, and best practices.
 
-📫 If you'd like to contact me, feel free to add me as a friend on WeChat using the QR code below.
+📫 If you'd like to contact me, feel free to add me as a friend on WeChat using the QR code below. ☕️ If you have benefited from my articles, you are welcome to buy me a coffee.
 
-<div style="text-align: center;">
-  <img src="/assets/images/wx-code.png" width="300" alt="wx code">
-</div>
-
-☕️ If you have benefited from my articles, you are welcome to buy me a coffee via the QR code below.
-
-<div style="text-align: center;">
-  <img src="/assets/images/payment-code.png" width="300" alt="payment code">
+<div style="display: flex; justify-content: center; gap: 24px; flex-wrap: wrap;">
+  <div style="text-align: center;">
+    <img src="/assets/images/wx-code.png" width="250" alt="wx code">
+    <p style="margin-top: 8px; font-size: 0.9em; color: #666;">📫 WeChat</p>
+  </div>
+  <div style="text-align: center;">
+    <img src="/assets/images/payment-code.png" width="250" alt="payment code">
+    <p style="margin-top: 8px; font-size: 0.9em; color: #666;">☕️ Buy me a coffee</p>
+  </div>
 </div>

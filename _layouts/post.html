@@ -20,6 +20,16 @@ layout: default
     {% include sharelinks.html %}
   </div>
 
+  <aside class="post-toc" aria-label="{% if page.lang == 'zh' %}文章目录{% else %}Table of contents{% endif %}">
+    <div class="post-toc__header">
+      <strong class="post-toc__title">{% if page.lang == 'zh' %}本文导览{% else %}On this page{% endif %}</strong>
+      <button class="post-toc__toggle" type="button" aria-expanded="true" aria-label="{% if page.lang == 'zh' %}隐藏文章目录{% else %}Hide table of contents{% endif %}">‹</button>
+    </div>
+    <nav class="post-toc__nav">
+      <ol class="post-toc__list"></ol>
+    </nav>
+  </aside>
+
   <div class="post-content e-content" itemprop="articleBody">
     {{ content }}
     {% include navlinks.html %}
@@ -31,3 +41,64 @@ layout: default
 {% if page.mermaid %}
   {% include mermaid.html %}
 {% endif %}
+
+<script>
+(function () {
+  var toc = document.querySelector('.post-toc');
+  var content = document.querySelector('.post-content');
+  if (!toc || !content) return;
+
+  var headings = Array.prototype.slice.call(content.querySelectorAll('h2, h3, h4'));
+  if (!headings.length) {
+    toc.hidden = true;
+    return;
+  }
+
+  var list = toc.querySelector('.post-toc__list');
+  headings.forEach(function (heading, index) {
+    if (!heading.id) heading.id = 'section-' + (index + 1);
+
+    var item = document.createElement('li');
+    item.className = 'post-toc__item post-toc__item--' + heading.tagName.toLowerCase();
+
+    var link = document.createElement('a');
+    link.href = '#' + encodeURIComponent(heading.id);
+    link.textContent = heading.textContent.trim();
+    item.appendChild(link);
+    list.appendChild(item);
+  });
+
+  var toggle = toc.querySelector('.post-toc__toggle');
+  var isChinese = document.documentElement.lang === 'zh' || '{{ page.lang }}' === 'zh';
+
+  function setCollapsed(collapsed) {
+    toc.classList.toggle('post-toc--collapsed', collapsed);
+    toggle.setAttribute('aria-expanded', String(!collapsed));
+    toggle.setAttribute('aria-label', collapsed
+      ? (isChinese ? '显示文章目录' : 'Show table of contents')
+      : (isChinese ? '隐藏文章目录' : 'Hide table of contents'));
+    toggle.textContent = collapsed ? '›' : '‹';
+    try {
+      localStorage.setItem('postTocCollapsed', String(collapsed));
+    } catch (error) {}
+  }
+
+  var savedState = null;
+  try {
+    savedState = localStorage.getItem('postTocCollapsed');
+  } catch (error) {}
+  setCollapsed(savedState === null
+    ? window.matchMedia('(max-width: 1279px)').matches
+    : savedState === 'true');
+
+  toggle.addEventListener('click', function () {
+    setCollapsed(!toc.classList.contains('post-toc--collapsed'));
+  });
+
+  list.addEventListener('click', function (event) {
+    if (event.target.tagName === 'A' && window.matchMedia('(max-width: 1279px)').matches) {
+      setCollapsed(true);
+    }
+  });
+})();
+</script>
